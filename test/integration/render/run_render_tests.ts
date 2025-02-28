@@ -671,7 +671,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                         break;
                     }
                     case 'setStyle':
-                        map.setStyle(operation[1], {localIdeographFontFamily: false as any});
+                        await map.setStyle(operation[1], {localIdeographFontFamily: false as any});
                         break;
                     case 'pauseSource':
                         map.style.sourceCaches[operation[1]].pause();

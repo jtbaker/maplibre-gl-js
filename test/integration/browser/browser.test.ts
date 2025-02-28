@@ -210,7 +210,7 @@ describe('Browser tests', () => {
     });
 
     test('Marker: correct position', {retry: 3, timeout: 20000}, async () => {
-        const markerScreenPosition = await page.evaluate(() => {
+        const markerScreenPosition = await page.evaluate(async () => {
             const markerMapPosition = [11.40, 47.30] as [number, number];
             const marker = new maplibregl.Marker()
                 .setLngLat(markerMapPosition)
@@ -225,7 +225,7 @@ describe('Browser tests', () => {
                 , {duration: 0}
             );
 
-            map.setStyle({
+            await map.setStyle({
                 version: 8,
                 sources: {
                     osm: {
@@ -345,12 +345,12 @@ describe('Browser tests', () => {
     });
 
     test('Marker: correct opacity after resize with 3d terrain', {retry: 3, timeout: 20000}, async () => {
-        const markerOpacity = await page.evaluate(() => {
+        const markerOpacity = await page.evaluate(async () => {
             const marker = new maplibregl.Marker()
                 .setLngLat(map.getCenter())
                 .addTo(map);
 
-            map.setStyle({
+            await map.setStyle({
                 version: 8,
                 sources: {
                     osm: {

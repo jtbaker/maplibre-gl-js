@@ -954,7 +954,7 @@ describe('map events', () => {
         await sleep(1);
         map.off('load', failSpy);
         const promise = map.once('load');
-        map.setStyle(createStyle());
+        await map.setStyle(createStyle());
 
         await promise;
         expect(failSpy).not.toHaveBeenCalled();
@@ -1081,7 +1081,7 @@ describe('map events', () => {
                 ]
             };
             const map = createMap();
-            map.setStyle(style);
+            await map.setStyle(style);
 
             const errorHandler = vi.fn();
             map.on('error', errorHandler);

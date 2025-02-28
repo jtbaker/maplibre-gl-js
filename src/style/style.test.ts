@@ -106,31 +106,31 @@ describe('Style', () => {
 });
 
 describe('Style#loadURL', () => {
-    test('fires "dataloading"', () => {
+    test('fires "dataloading"', async () => {
         const style = new Style(getStubMap());
         const spy = vi.fn();
 
         style.on('dataloading', spy);
-        style.loadURL('style.json');
+        await style.loadURL('style.json');
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0].target).toBe(style);
         expect(spy.mock.calls[0][0].dataType).toBe('style');
     });
 
-    test('transforms style URL before request', () => {
+    test('transforms style URL before request', async () => {
         const map = getStubMap();
         const spy = vi.spyOn(map._requestManager, 'transformRequest');
 
         const style = new Style(map);
-        style.loadURL('style.json');
+        await style.loadURL('style.json');
 
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy.mock.calls[0][0]).toBe('style.json');
         expect(spy.mock.calls[0][1]).toBe('Style');
     });
 
-    test('validates the style', () => new Promise<void>(done => {
+    test('validates the style', () => new Promise<void>(async done => {
         const style = new Style(getStubMap());
 
         style.on('error', ({error}) => {
@@ -139,14 +139,14 @@ describe('Style#loadURL', () => {
             done();
         });
 
-        style.loadURL('style.json');
+        await style.loadURL('style.json');
         server.respondWith(JSON.stringify(createStyleJSON({version: 'invalid'})));
         server.respond();
     }));
 
-    test('cancels pending requests if removed', () => {
+    test('cancels pending requests if removed', async () => {
         const style = new Style(getStubMap());
-        style.loadURL('style.json');
+        await style.loadURL('style.json');
         style._remove();
         expect((server.lastRequest as any).aborted).toBe(true);
     });
@@ -156,7 +156,7 @@ describe('Style#loadURL', () => {
         const spy = vi.fn();
 
         style.on('error', spy);
-        style.loadURL('style.json');
+        await style.loadURL('style.json');
         style._remove();
         await sleep(0);
 
@@ -168,7 +168,7 @@ describe('Style#loadURL', () => {
         const errorStatus = 400;
 
         const promise = style.once('error');
-        style.loadURL('style.json');
+        await style.loadURL('style.json');
         server.respondWith(request => request.respond(errorStatus));
         server.respond();
         const {error} = await promise;

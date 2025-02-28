@@ -17,8 +17,9 @@ export const enum ResourceType {
 /**
  * This function is used to tranform a request.
  * It is used just before executing the relevant request.
+ * It can be either a sync or async function.
  */
-export type RequestTransformFunction = (url: string, resourceType?: ResourceType) => RequestParameters | undefined;
+export type RequestTransformFunction = (url: string, resourceType?: ResourceType) => RequestParameters | Promise<RequestParameters> | undefined;
 
 export class RequestManager {
     _transformRequestFn: RequestTransformFunction;
@@ -27,8 +28,11 @@ export class RequestManager {
         this._transformRequestFn = transformRequestFn;
     }
 
-    transformRequest(url: string, type: ResourceType) {
+    async transformRequest(url: string, type: ResourceType) {
         if (this._transformRequestFn) {
+            if(this._transformRequestFn.constructor.name == "AsyncFunction") {
+                return await this._transformRequestFn(url, type) || {url}
+            }
             return this._transformRequestFn(url, type) || {url};
         }
 

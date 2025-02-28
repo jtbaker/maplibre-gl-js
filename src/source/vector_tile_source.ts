@@ -191,7 +191,7 @@ export class VectorTileSource extends Evented implements Source {
     async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params: WorkerTileParameters = {
-            request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
+            request: await this.map._requestManager.transformRequest(url, ResourceType.Tile),
             uid: tile.uid,
             tileID: tile.tileID,
             zoom: tile.tileID.overscaledZ,

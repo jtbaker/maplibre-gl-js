@@ -22,9 +22,9 @@ afterEach(() => {
 });
 
 describe('#setStyle', () => {
-    test('returns self', () => {
+    test('returns self', async () => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
-        expect(map.setStyle({
+        expect(await map.setStyle({
             version: 8,
             sources: {},
             layers: []
@@ -88,11 +88,11 @@ describe('#setStyle', () => {
         });
     });
 
-    test('can be called more than once', () => {
+    test('can be called more than once', async () => {
         const map = createMap();
 
-        map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
-        map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
+        await map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
+        await map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
 
     });
 
@@ -105,21 +105,21 @@ describe('#setStyle', () => {
         ]};
         const map = createMap({style: redStyle});
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        map.setStyle(blueStyle);
+        await map.setStyle(blueStyle);
         await map.once('style.load');
-        map.setStyle(redStyle);
+        await map.setStyle(redStyle);
         const serializedStyle =  map.style.serialize();
         expect(serializedStyle.layers[0].paint['background-color']).toBe('red');
         spy.mockRestore();
     });
 
-    test('style transform overrides unmodified map transform', () => new Promise<void>(done => {
+    test('style transform overrides unmodified map transform', () => new Promise<void>(async done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
         map.transform.setMaxBounds(new LngLatBounds([-120, -60], [140, 80]));
         map.transform.resize(600, 400, true);
         expect(map.transform.zoom).toBe(0.6983039737971013);
         expect(map.transform.unmodified).toBeTruthy();
-        map.setStyle(createStyle());
+        await map.setStyle(createStyle());
         map.on('style.load', () => {
             expect(fixedLngLat(map.transform.center)).toEqual(fixedLngLat({lng: -73.9749, lat: 40.7736}));
             expect(fixedNum(map.transform.zoom)).toBe(12.5);
@@ -129,10 +129,10 @@ describe('#setStyle', () => {
         });
     }));
 
-    test('style transform does not override map transform modified via options', () => new Promise<void>(done => {
+    test('style transform does not override map transform modified via options', () => new Promise<void>(async done => {
         const map = new Map({container: window.document.createElement('div'), zoom: 10, center: [-77.0186, 38.8888]} as any as MapOptions);
         expect(map.transform.unmodified).toBeFalsy();
-        map.setStyle(createStyle());
+        await map.setStyle(createStyle());
         map.on('style.load', () => {
             expect(fixedLngLat(map.transform.center)).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
             expect(fixedNum(map.transform.zoom)).toBe(10);
@@ -142,13 +142,13 @@ describe('#setStyle', () => {
         });
     }));
 
-    test('style transform does not override map transform modified via setters', () => new Promise<void>(done => {
+    test('style transform does not override map transform modified via setters', () => new Promise<void>(async done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
         expect(map.transform.unmodified).toBeTruthy();
         map.setZoom(10);
         map.setCenter([-77.0186, 38.8888]);
         expect(map.transform.unmodified).toBeFalsy();
-        map.setStyle(createStyle());
+        await map.setStyle(createStyle());
         map.on('style.load', () => {
             expect(fixedLngLat(map.transform.center)).toEqual(fixedLngLat({lng: -77.0186, lat: 38.8888}));
             expect(fixedNum(map.transform.zoom)).toBe(10);
@@ -158,26 +158,26 @@ describe('#setStyle', () => {
         });
     }));
 
-    test('passing null removes style', () => {
+    test('passing null removes style',async () => {
         const map = createMap();
         const style = map.style;
         expect(style).toBeTruthy();
         vi.spyOn(style, '_remove');
-        map.setStyle(null);
+        await map.setStyle(null);
         expect(style._remove).toHaveBeenCalledTimes(1);
     });
 
-    test('passing null releases the worker', () => {
+    test('passing null releases the worker', async () => {
         const map = createMap();
         const spyWorkerPoolAcquire = vi.spyOn(map.style.dispatcher.workerPool, 'acquire');
         const spyWorkerPoolRelease = vi.spyOn(map.style.dispatcher.workerPool, 'release');
 
-        map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
+        await map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
         expect(spyWorkerPoolAcquire).toHaveBeenCalledTimes(1);
         expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(0);
 
         spyWorkerPoolAcquire.mockClear();
-        map.setStyle(null);
+        await map.setStyle(null);
         expect(spyWorkerPoolAcquire).toHaveBeenCalledTimes(0);
         expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(1);
 
@@ -186,7 +186,7 @@ describe('#setStyle', () => {
         spyWorkerPoolRelease.mockClear();
     });
 
-    test('transformStyle should copy the source and the layer into next style', () => new Promise<void>(done => {
+    test('transformStyle should copy the source and the layer into next style', () => new Promise<void>(async done => {
         const style = extend(createStyle(), {
             sources: {
                 maplibre: {
@@ -210,7 +210,7 @@ describe('#setStyle', () => {
         });
 
         const map = createMap({style});
-        map.setStyle(createStyle(), {
+        await map.setStyle(createStyle(), {
             diff: false,
             transformStyle: (prevStyle, nextStyle) => ({
                 ...nextStyle,
@@ -258,8 +258,8 @@ describe('#setStyle', () => {
         });
 
         const map = createMap({style});
-        window.setTimeout(() => {
-            map.setStyle(createStyle(), {
+        window.setTimeout(async () => {
+            await map.setStyle(createStyle(), {
                 diff: true,
                 transformStyle: (prevStyle, nextStyle) => ({
                     ...nextStyle,
@@ -282,9 +282,9 @@ describe('#setStyle', () => {
         }, 100);
     }));
 
-    test('transformStyle should get called when passed to setStyle after the map is initialised without a style', () => new Promise<void>(done => {
+    test('transformStyle should get called when passed to setStyle after the map is initialised without a style', () => new Promise<void>(async done => {
         const map = createMap({deleteStyle: true});
-        map.setStyle(createStyle(), {
+        await map.setStyle(createStyle(), {
             diff: true,
             transformStyle: (prevStyle, nextStyle) => {
                 expect(prevStyle).toBeUndefined();
@@ -317,9 +317,9 @@ describe('#setStyle', () => {
         });
     }));
 
-    test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', () => new Promise<void>(done => {
+    test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', () => new Promise<void>(async done => {
         const map = createMap({deleteStyle: true});
-        map.setStyle({version: 8, sources: {}, layers: []}, {
+        await map.setStyle({version: 8, sources: {}, layers: []}, {
             diff: true,
             transformStyle: (prevStyle, nextStyle) => {
                 expect(prevStyle).toBeUndefined();
@@ -330,13 +330,13 @@ describe('#setStyle', () => {
         map.on('load', () => done());
     }));
 
-    test('Override default style validation', () => {
+    test('Override default style validation', async () => {
         let validationOption = true;
         vi.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
             validationOption = options.validate;
         });
         const map = createMap({style: null});
-        map.setStyle({version: 8, sources: {}, layers: []}, {validate: false});
+        await map.setStyle({version: 8, sources: {}, layers: []}, {validate: false});
 
         expect(validationOption).toBeFalsy();
     });
@@ -475,7 +475,7 @@ describe('#getStyle', () => {
         });
     }));
 
-    test('creates a new Style if diff fails', () => {
+    test('creates a new Style if diff fails', async () => {
         const style = createStyle();
         const map = createMap({style});
         vi.spyOn(map.style, 'setState').mockImplementation(() => {
@@ -484,17 +484,17 @@ describe('#getStyle', () => {
         vi.spyOn(console, 'warn').mockImplementation(() => {});
 
         const previousStyle = map.style;
-        map.setStyle(style);
+        await map.setStyle(style);
         expect(map.style && map.style !== previousStyle).toBeTruthy();
     });
 
-    test('creates a new Style if diff option is false', () => {
+    test('creates a new Style if diff option is false', async () => {
         const style = createStyle();
         const map = createMap({style});
         const spy = vi.spyOn(map.style, 'setState');
 
         const previousStyle = map.style;
-        map.setStyle(style, {diff: false});
+        await map.setStyle(style, {diff: false});
         expect(map.style && map.style !== previousStyle).toBeTruthy();
         expect(spy).not.toHaveBeenCalled();
     });

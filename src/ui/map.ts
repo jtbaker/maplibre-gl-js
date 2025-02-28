@@ -1823,7 +1823,7 @@ export class Map extends Camera {
      * });
      * ```
      */
-    setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): this {
+    async setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): Promise<this> {
         options = extend({},
             {
                 localIdeographFontFamily: this._localIdeographFontFamily,
@@ -1835,7 +1835,8 @@ export class Map extends Camera {
             return this;
         } else {
             this._localIdeographFontFamily = options.localIdeographFontFamily;
-            return this._updateStyle(style, options);
+            await this._updateStyle(style, options);
+            return this
         }
     }
 
@@ -1864,7 +1865,7 @@ export class Map extends Camera {
         return str;
     }
 
-    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
+    async _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
         // transformStyle relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded
         if (options.transformStyle && this.style && !this.style._loaded) {
             this.style.once('style.load', () => this._updateStyle(style, options));
@@ -1890,7 +1891,7 @@ export class Map extends Camera {
         this.style.setEventedParent(this, {style: this.style});
 
         if (typeof style === 'string') {
-            this.style.loadURL(style, options, previousStyle);
+            await this.style.loadURL(style, options, previousStyle);
         } else {
             this.style.loadJSON(style, options, previousStyle);
         }
@@ -1906,10 +1907,10 @@ export class Map extends Camera {
         }
     }
 
-    _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
+    async _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
-            const request = this._requestManager.transformRequest(url, ResourceType.Style);
+            const request = await this._requestManager.transformRequest(url, ResourceType.Style);
             getJSON<StyleSpecification>(request, new AbortController()).then((response) => {
                 this._updateDiff(response.data, options);
             }).catch((error) => {
@@ -2386,8 +2387,8 @@ export class Map extends Camera {
      * ```
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
      */
-    loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
-        return ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+    async loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
+        return ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
     }
 
     /**
@@ -3328,7 +3329,7 @@ export class Map extends Camera {
      * longer consumes browser resources. Afterwards, you must not call any other
      * methods on the map.
      */
-    remove() {
+    async remove() {
         if (this._hash) this._hash.remove();
 
         for (const control of this._controls) control.onRemove(this);
@@ -3342,7 +3343,7 @@ export class Map extends Camera {
         this.painter.destroy();
         this.handlers.destroy();
         delete this.handlers;
-        this.setStyle(null);
+        await this.setStyle(null);
         if (typeof window !== 'undefined') {
             removeEventListener('online', this._onWindowOnline, false);
         }
