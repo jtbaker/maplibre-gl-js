@@ -39,10 +39,16 @@ export async function loadSprite(
     const imagesMap: {[id: string]: Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>>} = {};
 
     for (const {id, url} of spriteArray) {
-        const jsonRequestParameters = requestManager.transformRequest(normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
+        const jsonRequestParameters = {
+            ...requestManager.transformRequest(normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON), 
+            ...(await requestManager.asyncTransformRequest(normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON))
+        };
         jsonsMap[id] = getJSON<SpriteJSON>(jsonRequestParameters, abortController);
 
-        const imageRequestParameters = requestManager.transformRequest(normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
+        const imageRequestParameters = {
+            ...requestManager.transformRequest(normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage), 
+            ...(await requestManager.asyncTransformRequest(normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage))
+        };
         imagesMap[id] = ImageRequest.getImage(imageRequestParameters, abortController);
     }
 

@@ -70,7 +70,17 @@ export class VideoSource extends ImageSource {
 
         this.urls = [];
         for (const url of options.urls) {
-            this.urls.push(this.map._requestManager.transformRequest(url, ResourceType.Source).url);
+            const request = {
+                ...this.map._requestManager.transformRequest(
+                    url,
+                    ResourceType.Tile
+                ),
+                ...(await this.map._requestManager.asyncTransformRequest(
+                    url,
+                    ResourceType.Tile
+                )),
+            };
+            this.urls.push(request.url);
         }
         try {
             const video = await getVideo(this.urls);
